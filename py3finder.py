@@ -3,9 +3,11 @@ import requests
 import json
 
 
-def parse_json():
+def parse_portingdb():
     '''Picks idle packages from PortingDB and returns them as a list.'''
-
+    
+    # TODO: get data from this ulr directly in this function
+    # https://raw.githubusercontent.com/fedora-python/portingdb/532958f193bcaec12dc97808ec5011de90096c64/data/loc.json
     with open('portingdb.json') as data_file:    
         data = json.load(data_file)
     
@@ -18,7 +20,7 @@ def parse_json():
     return packages
 
 
-def parse_html():
+def parse_pypi():
     '''Picks Python 3 compatible packages from PyPI and returns them
     as a list.'''
 
@@ -34,64 +36,23 @@ def parse_html():
     return packages
 
 
-def separate_packages_pdb():
-    '''Opens the raw_portingdb.txt file with packages from portingdb
-    and deletes redundant texts. It writes bare names of packages
-    to portingdb.txt file.'''
-
-    raw_portingdb = open('raw_portingdb.txt', 'r')
-    portingdb = open('portingdb.txt', 'w')
-    
-    for line in raw_portingdb:
-        splitted_line = line.split( )
-        package, *_ = splitted_line
-        portingdb.write(package)
-        portingdb.write("\n")
-
-    # Do not forget to close files. :)
-    raw_portingdb.close()
-    portingdb.close()
-
-
-def separate_packages_PyPI():
-    '''Opens the raw_PyPI.txt file with packages from PyPI
-    and deletes redundant texts. It writes bare names of packages
-    to PyPI.txt file.'''
-
-    raw_pypi = open('raw_PyPI.txt', 'r')
-    pypi = open('PyPI.txt', 'w')
-
-    for line in raw_pypi:
-        if line[0] == "<":
-            splitted_line = line.split('/')
-            _, _, package, _, _ = splitted_line
-            pypi.write(package)
-            pypi.write("\n")
-
-    # Do not forget to close files. :)
-    raw_pypi.close()
-    pypi.close()
-
 def compare_packages():
-    '''Copare packages from files portingdb.txt and PyPI.txt.
-    Writes packages in both files in output.txt file'''
+    '''Copares packages from portingdb and PyPI.
+    Writes packages from both sites into output.txt file'''
 
-    portingdb = open('portingdb.txt', 'r')
+    portingdb = parse_portingdb()
+    pypi = parse_pypi()
     output = open('output.txt', 'w')
    
     for package in portingdb:
-        pypi = open('PyPI.txt', 'r')
         for py3package in pypi:
             if py3package == package:
-                print("Jej! I found a Python 3 compatible package!")
+                print("Hurray! I found a Python 3 compatible package! -", package)
+                #TODO: write each package on the new line
                 output.write(package)
-#                break
-#            elif limit < ord(py3package[0]):
-#                break
-        pypi.close()
 
-    # Do not forget to close files. :)
-    portingdb.close()
+    # Do not forget to close the file. :)
     output.close()
 
+compare_packages()
 
