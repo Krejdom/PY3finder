@@ -6,10 +6,8 @@ import json
 def parse_portingdb():
     '''Picks idle packages from PortingDB and returns them as a list.'''
     
-    # TODO: get data from this ulr directly in this function
-    # https://raw.githubusercontent.com/fedora-python/portingdb/532958f193bcaec12dc97808ec5011de90096c64/data/loc.json
-    with open('portingdb.json') as data_file:    
-        data = json.load(data_file)
+    page = requests.get('https://raw.githubusercontent.com/Krejdom/portingdb/master/data/fedora.json')
+    data = page.json()
     
     packages = []
 
