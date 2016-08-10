@@ -46,8 +46,8 @@ def compare_packages():
         for py3package in pypi:
             if py3package == package:
                 print("Hurray! I found a Python 3 compatible package! -", package)
-                #TODO: write each package on the new line
                 output.write(package)
+                output.write("\n")
 
     # Do not forget to close the file. :)
     output.close()
