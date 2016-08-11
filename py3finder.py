@@ -6,7 +6,7 @@ import json
 def parse_portingdb():
     '''Picks idle packages from PortingDB and returns them as a list.'''
     
-    page = requests.get('https://raw.githubusercontent.com/Krejdom/portingdb/master/data/fedora.json')
+    page = requests.get('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/fedora.json')
     data = page.json()
     
     packages = []
@@ -41,13 +41,25 @@ def compare_packages():
     portingdb = parse_portingdb()
     pypi = parse_pypi()
     output = open('output.txt', 'w')
-   
-    for package in portingdb:
-        for py3package in pypi:
-            if py3package == package:
-                print("Hurray! I found a Python 3 compatible package! -", package)
-                output.write(package)
-                output.write("\n")
+    
+    # find the match
+    packages = set(portingdb).intersection(pypi)
+    cp = len(packages)
+    
+    # print out the result
+    if cp == 0:
+        print('Nothing found.')
+    elif cp == 1:
+        print('I found', len(packages), 'package:', packages[0])
+    else:
+        print('I found', len(packages), 'packages: \n')
+        for p in packages:
+            print(p)
+
+    # write packages into the output file
+    for package in packages:
+        output.write(package)
+        output.write("\n")
 
     # Do not forget to close the file. :)
     output.close()
