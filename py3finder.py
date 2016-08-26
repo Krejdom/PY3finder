@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from lxml import html
 import requests
 import json
@@ -36,11 +38,13 @@ def parse_pypi():
     return packages
 
 
-def list_dropped():
+def list_dropped(url):
     '''Picks packages with status 'dropped' in PortingDB and returns them
     as a list.'''
+    # https://raw.githubusercontent.com/fedora-python/portingdb/570702f44b4e6b2f90788176d5374878d70d8eb3/data/fedora-update.yaml
+    # https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml
     
-    page = requests.get('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml')
+    page = requests.get(url)
     data = page.text
     yaml_data = yaml.load(data)
 
@@ -53,27 +57,22 @@ def list_dropped():
     # Iterate over packages and pick ones with dropped status.
     for package in packages:
         # Some packages has not a 'status', it raises a Key Error
-        try:
+        if 'status' in yaml_data[package].keys():
             if yaml_data[package]['status'] == 'dropped':
                 dropped_packages.append(package)
-        except KeyError:
-            pass
     
     return dropped_packages
 
-list_dropped()
 
-
-def compare_packages():
+def compare_packages(idle, py3com, dropped):
     '''Copares packages from portingdb and PyPI.
     Writes packages from both sites into output.txt file'''
 
-    portingdb = parse_portingdb()
-    pypi = parse_pypi()
     output = open('output.txt', 'w')
     
     # Find the match
-    packages = set(portingdb).intersection(pypi)
+    packages = set(idle).intersection(py3com)
+    packages = set(packages).difference(dropped)
     cp = len(packages)
     
     # Print out the result
@@ -95,5 +94,12 @@ def compare_packages():
     output.close()
 
 
-# compare_packages()
+def main():
+    idle = parse_portingdb()
+    py3com = parse_pypi()
+    dropped = list_dropped('https://raw.githubusercontent.com/fedora-python/portingdb/570702f44b4e6b2f90788176d5374878d70d8eb3/data/fedora-update.yaml') + list_dropped('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml')
+    compare_packages(idle, py3com, dropped)
 
+
+if __name__ == "__main__":
+    main()
