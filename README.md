@@ -8,4 +8,3 @@ If you find some package with this tool:
     * If there is a bug, make it Blocks #1285816.
     * If there is no bug read this: https://fedoraproject.org/wiki/User:Pviktori/Python_3_Bug_Filing and fill the bug! :)
 * If it is red (Blocked) in PortingDB, continue there: Investigate & Annotate > But it is Python 3 compatible upstream! > Blocked packages http://fedora.portingdb.xyz/howto/#investigate-annotate
-* If it is dark gray (Dropped) in PortingDB, let it be.
