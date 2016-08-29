@@ -73,6 +73,8 @@ def compare_packages(idle, py3com, dropped):
     # Find the match
     packages = set(idle).intersection(py3com)
     packages = set(packages).difference(dropped)
+
+    packages = sorted(packages)
     cp = len(packages)
     
     # Print out the result
