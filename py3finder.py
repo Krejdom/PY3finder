@@ -5,25 +5,12 @@ import requests
 import json
 import yaml
 import pprint
-
-
-def parse_portingdb():
-    '''Picks idle packages from PortingDB and returns them as a list.'''
-    
-    page = requests.get('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/fedora.json')
-    data = page.json()
-    
-    packages = []
-
-    for p in data:
-        if data[p]["status"] == "idle":
-            packages.append(p)
-
-    return packages
+import re
+import urllib3
 
 
 def parse_pypi():
-    '''Picks Python 3 compatible packages from PyPI and returns them
+    '''Picks Python 3 copmatible packages from PyPI and returns them
     as a list.'''
 
     page = requests.get('https://pypi.python.org/pypi?:action=browse&show=all&c=533')
@@ -38,43 +25,34 @@ def parse_pypi():
     return packages
 
 
-def list_dropped(url):
-    '''Picks packages with status 'dropped' in PortingDB and returns them
-    as a list.'''
-    # https://raw.githubusercontent.com/fedora-python/portingdb/570702f44b4e6b2f90788176d5374878d70d8eb3/data/fedora-update.yaml
-    # https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml
+def get_html(url):
+    '''Downloads the html and convets it to the string.'''
+
+    http = urllib3.PoolManager()
+    r = http.request('GET', url)
+    return r.data.decode("utf-8")
+
+
+def parse_portingdb():
+    '''Picks gray and red packages from PortingDB and returns them as a list.'''
     
-    page = requests.get(url)
-    data = page.text
-    yaml_data = yaml.load(data)
+    string = get_html('http://fedora.portingdb.xyz/')
 
-    # Create a list of all names of packages
-    packages = yaml_data.keys()
-    
-    # Initialize the list for dropped packages    
-    dropped_packages = []
+    idle_packages = re.findall(r'DDDDDD">&nbsp;<\/span>&nbsp;<a href="\/pkg\/([\w]*-?[\w]*)\/">', string)
+    blocked_pacakages = re.findall(r'D9534F">&nbsp;<\/span>&nbsp;<a href="\/pkg\/([\w]*-?[\w]*)\/">', string)
 
-    # Iterate over packages and pick ones with dropped status.
-    for package in packages:
-        # Some packages has not a 'status', it raises a Key Error
-        if 'status' in yaml_data[package].keys():
-            if yaml_data[package]['status'] == 'dropped':
-                dropped_packages.append(package)
-    
-    return dropped_packages
+    return idle_packages + blocked_pacakages
 
 
-def compare_packages(idle, py3com, dropped):
+def compare_packages(unknown, py3com):
     '''Copares packages from portingdb and PyPI.
     Writes packages from both sites into output.txt file'''
 
     output = open('output.txt', 'w')
     
-    # Find the match
-    packages = set(idle).intersection(py3com)
-    packages = set(packages).difference(dropped)
+    # Find the intersection between unknown and Python 3 compatible
+    packages = sorted(set(unknown).intersection(py3com))
 
-    packages = sorted(packages)
     cp = len(packages)
     
     # Print out the result
@@ -97,10 +75,9 @@ def compare_packages(idle, py3com, dropped):
 
 
 def main():
-    idle = parse_portingdb()
+    unknown = parse_portingdb()
     py3com = parse_pypi()
-    dropped = list_dropped('https://raw.githubusercontent.com/fedora-python/portingdb/570702f44b4e6b2f90788176d5374878d70d8eb3/data/fedora-update.yaml') + list_dropped('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml')
-    compare_packages(idle, py3com, dropped)
+    compare_packages(unknown, py3com)
 
 
 if __name__ == "__main__":
