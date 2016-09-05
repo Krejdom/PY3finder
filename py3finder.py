@@ -41,32 +41,26 @@ def parse_portingdb():
     idle_packages = re.findall(r'DDDDDD">&nbsp;<\/span>&nbsp;<a href="\/pkg\/([\w]*-?[\w]*)\/">', string)
     blocked_pacakages = re.findall(r'D9534F">&nbsp;<\/span>&nbsp;<a href="\/pkg\/([\w]*-?[\w]*)\/">', string)
 
-    return idle_packages + blocked_pacakages
+    return idle_packages, blocked_pacakages
 
 
-def compare_packages(unknown, py3com):
-    '''Copares packages from portingdb and PyPI.
-    Writes packages from both sites into output.txt file'''
+def write_in_file(b_packages, i_packages):
+    '''
+    '''
 
     output = open('output.txt', 'w')
-    
-    # Find the intersection between unknown and Python 3 compatible
-    packages = sorted(set(unknown).intersection(py3com))
 
-    cp = len(packages)
-    
-    # Print out the result
-    if cp == 0:
-        print('Nothing found.')
-    elif cp == 1:
-        print('I found', len(packages), 'package:', packages[0])
-    else:
-        print('I found', len(packages), 'packages: \n')
-        for p in packages:
-            print(p)
+    # Write idle packages into the output file
+    output.write('IDLE PACKAGES:\n')
+    for package in i_packages:
+        output.write(package)
+        output.write("\n")
 
-    # Write packages into the output file
-    for package in packages:
+    output.write("\n")
+
+    # Write blocked packages into the output file
+    output.write('BLOCKED PACKAGES:\n')
+    for package in b_packages:
         output.write(package)
         output.write("\n")
 
@@ -74,10 +68,32 @@ def compare_packages(unknown, py3com):
     output.close()
 
 
+def print_result(typ, packages):
+
+    # Print out the result
+    print(typ, 'PACKAGES ({})'.format(len(packages)))
+    for p in packages:
+        print(p)
+    print()
+
+def compare_packages(unknown, py3com):
+    '''Copares packages from portingdb and PyPI.
+    Writes packages from both sites into output.txt file'''
+
+    idle, blocked = unknown
+
+    # Find the intersection between unknown and Python 3 compatible
+    i_packages = sorted(set(idle).intersection(py3com))
+    b_packages = sorted(set(blocked).intersection(py3com))
+    
+    print_result('IDLE', i_packages)
+    print_result('BLOCKED', b_packages)
+
+    write_in_file(b_packages, i_packages)
+
+
 def main():
-    unknown = parse_portingdb()
-    py3com = parse_pypi()
-    compare_packages(unknown, py3com)
+    compare_packages(parse_portingdb(), parse_pypi())
 
 
 if __name__ == "__main__":
