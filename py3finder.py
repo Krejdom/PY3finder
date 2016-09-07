@@ -9,9 +9,50 @@ import re
 import urllib3
 
 
+def load_igno():
+    '''Loads the file with ingnored packages and returns them as a list.'''
+
+    file = open('ignore.txt', 'r')
+    ignore = file.read().splitlines()
+    file.close()
+    return ignore
+
+
+def list_released():
+    page = requests.get('https://raw.githubusercontent.com/fedora-python/portingdb/master/data/upstream.yaml')
+    data = page.text
+    yaml_data = yaml.load(data)
+
+    # Create a list of all names of packages
+    packages = yaml_data.keys()
+    
+    # Initialize the list for released packages    
+    released = []
+
+    # Iterate over packages and pick ones with released status.
+    for package in packages:
+        # Some packages has not a 'status', it raises a Key Error
+        if 'status' in yaml_data[package].keys():
+            if yaml_data[package]['status'] == 'released':
+                released.append(package)
+    
+    return released
+
+
+def get_html(url):
+    '''Downloads the html and convets it to the string.'''
+
+    http = urllib3.PoolManager()
+    r = http.request('GET', url)
+    return r.data.decode("utf-8")
+
+
 def parse_pypi():
     '''Picks Python 3 copmatible packages from PyPI and returns them
     as a list.'''
+
+    # Packages to ignore:
+    ignore = ['pywbem', 'graphviz']
 
     page = requests.get('https://pypi.python.org/pypi?:action=browse&show=all&c=533')
     tree = html.fromstring(page.content)
@@ -22,15 +63,13 @@ def parse_pypi():
     # Deletes the first item, because it's not a package.
     del packages[0]
 
+    # Deletes ingnored pacakges from the list.
+    packages = set(packages).difference(load_igno())
+
+    # Deletes pacakges which are already marked as 'released' in portingDB
+    packages = set(packages).difference(list_released())
+
     return packages
-
-
-def get_html(url):
-    '''Downloads the html and convets it to the string.'''
-
-    http = urllib3.PoolManager()
-    r = http.request('GET', url)
-    return r.data.decode("utf-8")
 
 
 def parse_portingdb():
@@ -45,8 +84,7 @@ def parse_portingdb():
 
 
 def write_in_file(b_packages, i_packages):
-    '''
-    '''
+    '''Writes output packages into file output.txt'''
 
     output = open('output.txt', 'w')
 
@@ -69,12 +107,13 @@ def write_in_file(b_packages, i_packages):
 
 
 def print_result(typ, packages):
+    '''Print out the result in the Terminal'''
 
-    # Print out the result
     print(typ, 'PACKAGES ({})'.format(len(packages)))
     for p in packages:
         print(p)
     print()
+
 
 def compare_packages(unknown, py3com):
     '''Copares packages from portingdb and PyPI.
