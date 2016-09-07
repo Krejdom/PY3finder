@@ -1,0 +1,9 @@
+pywbem
+graphviz
+ganglia
+mirage
+mote
+saga
+v8
+instack
+pocketsphinx
