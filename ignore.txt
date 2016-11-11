@@ -1,9 +1,10 @@
-pywbem
-graphviz
+freeipa
 ganglia
+graphviz
+instack
 mirage
 mote
+pocketsphinx
+pywbem
 saga
 v8
-instack
-pocketsphinx
