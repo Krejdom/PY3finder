@@ -1,10 +1,14 @@
+diskimage-builder
 freeipa
 ganglia
+gofer
 graphviz
 instack
 mirage
 mote
 pocketsphinx
+python-cli
 pywbem
 saga
 v8
+
