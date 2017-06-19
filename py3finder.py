@@ -11,10 +11,12 @@ import urllib3
 
 def load_igno():
     '''Loads the file with ingnored packages and returns them as a list.'''
-
-    file = open('ignore.txt', 'r')
-    ignore = file.read().splitlines()
-    file.close()
+    try:
+        file = open('ignore.txt', 'r')
+        ignore = file.read().splitlines()
+        file.close()
+    except FileNotFoundError:
+        return []
     return ignore
 
 
